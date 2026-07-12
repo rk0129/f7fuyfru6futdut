@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Image & Music Viewer</title>
+
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Swiper -->
+  <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+  <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: sans-serif;
+    }
+    .page-img {
+      width: 100%;
+      height: auto;
+    }
+    .audio-box {
+      padding: 16px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="swiper">
+    <div class="swiper-wrapper">
+
+      <!-- ページ1 -->
+      <div class="swiper-slide">
+        <img src="img/page1.jpg" class="page-img">
+        <div class="audio-box">
+          <audio controls src="audio/page1.mp3"></audio>
+        </div>
+      </div>
+
+      <!-- ページ2 -->
+      <div class="swiper-slide">
+        <img src="img/page2.jpg" class="page-img">
+        <div class="audio-box">
+          <audio controls src="audio/page2.mp3"></audio>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+  </div>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js");
+  }
+
+  const swiper = new Swiper(".swiper", {
+    navigation: {
+      nextEl: ".swiper-button-next",
+      prevEl: ".swiper-button-prev",
+    }
+  });
+
+  // ページ内の音楽
+  const audios = document.querySelectorAll("audio");
+
+  // ページめくり音
+  const flipForward = new Audio("audio/flip-forward.mp3");
+  const flipBack = new Audio("audio/flip-back.mp3");
+
+  // 自動再生を許可するための「最初のタップ」
+  let userInteracted = false;
+  document.body.addEventListener("click", () => {
+    userInteracted = true;
+  }, { once: true });
+
+  // ページ切り替え時の処理
+  let lastIndex = 0;
+
+  swiper.on("slideChange", () => {
+    if (!userInteracted) return;
+
+    const newIndex = swiper.activeIndex;
+
+    // ページめくり音（方向判定）
+    if (newIndex > lastIndex) {
+      flipForward.currentTime = 0;
+      flipForward.play();
+    } else {
+      flipBack.currentTime = 0;
+      flipBack.play();
+    }
+
+    lastIndex = newIndex;
+
+    // 音楽切り替え
+    audios.forEach(a => {
+      a.pause();
+      a.currentTime = 0;
+    });
+
+    const currentAudio = audios[newIndex];
+    if (currentAudio) currentAudio.play();
+  });
+
+  // 初期ページの音楽再生
+  swiper.on("afterInit", () => {
+    if (!userInteracted) return;
+    const firstAudio = audios[0];
+    if (firstAudio) firstAudio.play();
+  });
+
+  // 音楽ループ再生
+  audios.forEach(a => {
+    a.addEventListener("ended", () => {
+      a.currentTime = 0;
+      a.play();
+    });
+  });
+</script>
+
+
+</body>
+</html>
