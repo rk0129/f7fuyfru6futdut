@@ -1,130 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <title>Image & Music Viewer</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ren Book</title>
 
+  <!-- Swiper CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+
+  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
 
-  <!-- Swiper -->
-  <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
-  <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
-
   <style>
-    body {
+    body, html {
       margin: 0;
+      padding: 0;
+      height: 100%;
       background: #000;
-      color: #fff;
-      font-family: sans-serif;
     }
-    .page-img {
+
+    .swiper {
+      width: 100%;
+      height: 100%;
+    }
+
+    .swiper-slide {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    .swiper-slide img {
       width: 100%;
       height: auto;
+      object-fit: contain;
     }
-    .audio-box {
-      padding: 16px;
-      text-align: center;
+
+    audio {
+      display: none;
     }
   </style>
 </head>
 
 <body>
 
+  <!-- Swiper本体 -->
   <div class="swiper">
     <div class="swiper-wrapper">
 
-      <!-- ページ1 -->
+      <!-- 1ページ目 -->
       <div class="swiper-slide">
-        <img src="img/page1.jpg" class="page-img">
-        <div class="audio-box">
-          <audio controls src="audio/page1.mp3"></audio>
-        </div>
+        <img src="img/page1.jpg">
+        <audio src="audio/page1.mp3"></audio>
       </div>
 
-      <!-- ページ2 -->
+      <!-- 2ページ目 -->
       <div class="swiper-slide">
-        <img src="img/page2.jpg" class="page-img">
-        <div class="audio-box">
-          <audio controls src="audio/page2.mp3"></audio>
-        </div>
+        <img src="img/page2.jpg">
+        <audio src="audio/page1.mp3"></audio>
+      </div>
+
+      <!-- 3ページ目 -->
+      <div class="swiper-slide">
+        <img src="img/page3.jpg">
+        <audio src="audio/page1.mp3"></audio>
       </div>
 
     </div>
-
-    <div class="swiper-button-prev"></div>
-    <div class="swiper-button-next"></div>
   </div>
 
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js");
-  }
+  <!-- Swiper JS -->
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  const swiper = new Swiper(".swiper", {
-    navigation: {
-      nextEl: ".swiper-button-next",
-      prevEl: ".swiper-button-prev",
-    }
-  });
-
-  // ページ内の音楽
-  const audios = document.querySelectorAll("audio");
-
-  // ページめくり音
-  const flipForward = new Audio("audio/flip-forward.mp3");
-  const flipBack = new Audio("audio/flip-back.mp3");
-
-  // 自動再生を許可するための「最初のタップ」
-  let userInteracted = false;
-  document.body.addEventListener("click", () => {
-    userInteracted = true;
-  }, { once: true });
-
-  // ページ切り替え時の処理
-  let lastIndex = 0;
-
-  swiper.on("slideChange", () => {
-    if (!userInteracted) return;
-
-    const newIndex = swiper.activeIndex;
-
-    // ページめくり音（方向判定）
-    if (newIndex > lastIndex) {
-      flipForward.currentTime = 0;
-      flipForward.play();
-    } else {
-      flipBack.currentTime = 0;
-      flipBack.play();
+  <script>
+    /* Service Worker */
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js");
     }
 
-    lastIndex = newIndex;
+    /* ページめくり音 */
+    const flipForward = new Audio("audio/flip-forward.mp3");
+    const flipBack = new Audio("audio/flip-back.mp3");
 
-    // 音楽切り替え
-    audios.forEach(a => {
-      a.pause();
-      a.currentTime = 0;
-    });
+    /* ページ内の音楽 */
+    const audios = document.querySelectorAll("audio");
 
-    const currentAudio = audios[newIndex];
-    if (currentAudio) currentAudio.play();
-  });
+    /* 最初のタップで自動再生を許可 */
+    let userInteracted = false;
+    document.body.addEventListener("click", () => {
+      userInteracted = true;
 
-  // 初期ページの音楽再生
-  swiper.on("afterInit", () => {
-    if (!userInteracted) return;
-    const firstAudio = audios[0];
-    if (firstAudio) firstAudio.play();
-  });
+      // 初期ページの音を鳴らす
+      const firstAudio = audios[0];
+      if (firstAudio) {
+        firstAudio.currentTime = 0;
+        firstAudio.play();
+      }
+    }, { once: true });
 
-  // 音楽ループ再生
-  audios.forEach(a => {
-    a.addEventListener("ended", () => {
-      a.currentTime = 0;
-      a.play();
-    });
-  });
-</script>
-
-
-</body>
-</html>
+    /* Swiper設定 */
+    const swiper = new Swiper(".swiper", {
+      allowTouchMove: true,
+      navigation: false,
+      on: {
+        init() {
+          // 初期ページの音（タップ済みなら鳴らす）
+          if (userInteracted) {
+            const firstAudio = audios[0];
+            if (firstAudio) firstAudio.play();
+          }
